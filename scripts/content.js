@@ -1,61 +1,104 @@
 console.log("script running")
 
-// let storedNodes = [];
+/**
+ * SCHEDULE/CALENDAR PANEL
+ */
 
-// function storeNodes() {
-//     const times = document.querySelectorAll('a.section-details-link');
-//     storedNodes = [];
-//     times.forEach((link) => {
-//         const span = link.querySelector('span.section-time-details');
-//         const textNode = link.childNodes[link.childNodes.length - 1];
+let storedNodes = []
 
-//         if (span && textNode && textNode.nodeType === Node.TEXT_NODE) {
-//             storedNodes.push({
-//                 courseName: textNode.nodeValue.trim(),
-//                 timeDetails: span.textContent.trim()
-//             });
-//         }
-//     });
-// }
+function storeNodes() {
+    const times = document.querySelectorAll('a.section-details-link')
+    storedNodes = []
+    times.forEach((link) => {
+        const span = link.querySelector('span.section-time-details')
+        const textNode = link.childNodes[link.childNodes.length - 1]
 
-// function updateNodes() {
-//     const times = document.querySelectorAll('a.section-details-link');
-//     let index = 0;
-//     times.forEach((link) => {
-//         const span = link.querySelector('span.section-time-details');
-//         const textNode = link.childNodes[link.childNodes.length - 1];
+        if (span && textNode && textNode.nodeType === Node.TEXT_NODE) {
+            storedNodes.push({
+                courseName: textNode.nodeValue.trim(),
+                timeDetails: span.textContent.trim()
+            })
+        }
+    })
+}
 
-//         if (span && textNode && textNode.nodeType === Node.TEXT_NODE) {
-//             textNode.nodeValue = storedNodes[index].courseName + " " + storedNodes[index].timeDetails;
-//             index++;
-//         }
-//     });
-// }
+function updateNodes() {
+    const times = document.querySelectorAll('a.section-details-link')
+    let index = 0
+    times.forEach((link) => {
+        const span = link.querySelector('span.section-time-details')
+        const textNode = link.childNodes[link.childNodes.length - 1]
 
-// const checkInterval = setInterval(() => {
-//     const scheduleCalendar = document.getElementById("scheduleCalendar");
-//     if (scheduleCalendar) {
-//         clearInterval(checkInterval);
+        if (span && textNode && textNode.nodeType === Node.TEXT_NODE && storedNodes[index]) {
+            textNode.nodeValue = storedNodes[index].courseName + ": " + storedNodes[index].timeDetails
+            index++
+        }
+    });
+}
 
-//         storeNodes();
-//         updateNodes();
+function addListenersToResizers(resizers) {
+    /**
+     * For whatever reason, the site refreshes the DOM upon resize events.
+     * So have a mutation observer wait for the DOM to settle before applying the updates
+     * to the schedule divs.
+     */
+    resizers.forEach(resizer => {
+        resizer.addEventListener('mousedown', (e) => {
+            e.preventDefault()
 
-//         const resizer = document.getElementById('inner-north-resizer');
-//         if (resizer) {
-//             resizer.addEventListener('mousedown', (e) => {
-//                 e.preventDefault();
-//                 console.log("Mouse down");
-//                 storeNodes(); 
-//             });
+            const handleMouseUp = () => {
+                let debounceTimer = null;
 
-//             resizer.addEventListener('mouseup', (e) => {
-//                 e.preventDefault();
-//                 console.log("Mouse up");
-//                 updateNodes();
-//             });
-//         }
-//     }
-// }, 100);
+                const observer = new MutationObserver(() => {
+                    if (debounceTimer) {
+                        clearTimeout(debounceTimer)
+                    }
+
+                    debounceTimer = setTimeout(() => {
+                        observer.disconnect()
+                        updateNodes()
+                    }, 200)
+                })
+
+                observer.observe(document.body, { 
+                    childList: true, 
+                    subtree: true 
+                })
+
+                document.removeEventListener("mouseup", handleMouseUp)
+            }
+
+            document.addEventListener('mouseup', handleMouseUp)
+        })
+    })
+}
+
+const checkInterval = setInterval(() => {
+    const scheduleCalendar = document.getElementById("scheduleCalendar")
+    if (scheduleCalendar) {
+        clearInterval(checkInterval)
+
+        storeNodes()
+        updateNodes()
+
+        let resizers = []
+        const northResizer = document.getElementById('inner-north-resizer')
+        const eastResizer = document.querySelector('.ui-layout-resizer.ui-layout-resizer-east')
+
+        if (northResizer) {
+            resizers.push(northResizer)
+        }
+        if (eastResizer) {
+            resizers.push(eastResizer)
+        }
+
+        addListenersToResizers(resizers)
+    }
+}, 100)
+
+/**
+ * PROFESSORS PANEL (after searching for courses)
+ */
 
 document.getElementById('search-go').addEventListener('click', () => {
     const observer = new MutationObserver((_, observer) => {

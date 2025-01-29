@@ -36,6 +36,28 @@ function updateNodes() {
     });
 }
 
+function updateTimeRows() {
+    const toTwelveHour = (time) => {
+        if (time === 0) return "12am"
+        if (time < 12) return time + "am"
+        if (time === 12) return "12pm"
+        return (time - 12) + "pm"
+    }
+
+    for (let i = 0; i <= 23; i++) {
+        const slotNum = 2 * i
+        const rowTime = document.querySelector(".fc-slot" + slotNum)
+        // if (i < 7) { // for removing rows in the schedule view (not fully working yet since it relies on the panel being resized intially to display properly)
+        //     document.querySelector(".fc-slot" + (slotNum + 1)).style.display = "none"
+        //     rowTime.style.display = "none"
+        //     continue
+        // }
+        if (rowTime && rowTime.children.length > 0) {
+            rowTime.children[0].textContent = toTwelveHour(parseInt(rowTime.children[0].textContent))
+        }
+    }
+}
+
 function addListenersToResizers(resizers) {
     /**
      * For whatever reason, the site refreshes the DOM upon resize events.
@@ -79,6 +101,7 @@ const checkInterval = setInterval(() => {
         clearInterval(checkInterval)
 
         storeNodes()
+        updateTimeRows()
         updateNodes()
 
         let resizers = []

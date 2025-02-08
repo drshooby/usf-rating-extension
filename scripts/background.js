@@ -13,19 +13,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 async function fetchProfData(sendResponse, profName) {
     try {
-        const encodedName = encodeURIComponent(profName);
+        const encodedName = encodeURIComponent(profName)
         const url = `https://rmp-retriever.onrender.com/professor?name=${encodedName}&id=U2Nob29sLTE2MDA=`
 
-        const response = await fetch(url);
+        const response = await fetch(url)
         if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
+            throw new Error(`HTTP error! Status: ${response.status}`)
         }
 
-        const data = await response.json();
-        sendResponse({ success: true, data });
+        const data = await response.json()
+        sendResponse({ success: true, data })
     } catch (error) {
-        console.error("API Fetch Error:", error);
-        sendResponse({ success: false, error: error.message });
+        console.error("API Fetch Error:", error)
+        sendResponse({ success: false, error: error.message })
     }
 }
 
@@ -33,15 +33,15 @@ async function fetchRatingData(sendResponse, profId) {
     try {
         const url = `https://rmp-retriever.onrender.com/ratings?id=${profId}`
 
-        const response = await fetch(url);
+        const response = await fetch(url)
         if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
+          throw new Error(`HTTP error! Status: ${response.status}`)
         }
 
-        const data = await response.json();
-        sendResponse({ success: true, data });
+        const data = await response.json()
+        sendResponse({ success: true, data })
     } catch (error) {
-        console.error("API Fetch Error:", error);
-        sendResponse({ success: false, error: error.message });
+        console.error("API Fetch Error:", error)
+        sendResponse({ success: false, error: error.message })
     }
 }

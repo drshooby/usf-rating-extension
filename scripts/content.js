@@ -126,8 +126,9 @@ const checkInterval = setInterval(() => {
 document.getElementById('search-go').addEventListener('click', () => {
     const observer = new MutationObserver((_, observer) => {
         const resultTable = document.getElementById('table1')
+
         if (resultTable) {
-            resultTable.addEventListener('click', (e) => {
+            resultTable.addEventListener('click', async (e) => {
                 e.preventDefault()
                 const clickedCell = e.target.closest('td')
                 if (!clickedCell) return
@@ -145,7 +146,23 @@ document.getElementById('search-go').addEventListener('click', () => {
                 }
 
                 const profName = profCell.textContent.trim().replace("(Primary)", "")
-                console.log("Professor name:", profName)
+                
+                const { avgDifficulty, avgRating, url } = await getRatingData(profName)
+
+                const attributeCell = parentRow.children[11]
+                if (attributeCell) {
+                    attributeCell.innerHTML += `
+                    <br>
+                    <br>
+                    <span>Difficulty: ${avgDifficulty}</span>
+                    <br>
+                    <br>
+                    <span>Rating: ${avgRating}</span>
+                    <br>
+                    <br>
+                    <a href="${url}" target="_blank">RMP Link</a>
+                    `
+                }
             })
             observer.disconnect()
         }
@@ -164,21 +181,21 @@ async function getRatingData(profName) {
         const profResponse = await chrome.runtime.sendMessage({
             action: "fetchProf",
             profName: profName,
-        });
+        })
 
         if (!profResponse.success) {
-            console.error("API Error (fetchProf):", profResponse.error, "for professor:", profName);
-            return;
+            console.error("API Error (fetchProf):", profResponse.error, "for professor:", profName)
+            return
         }
 
         // Step 2: Extract the professor's ID from the first result (gotta be quick, so don't care about the rest)
-        const firstResult = profResponse.data.newSearch.teachers.edges[0];
+        const firstResult = profResponse.data.newSearch.teachers.edges[0]
         if (!firstResult) {
-            console.error("No professor found with the name:", profName);
-            return;
+            console.error("No professor found with the name:", profName)
+            return
         }
 
-        const profId = firstResult.node.id;
+        const profId = firstResult.node.id
 
         // Step 3: Fetch rating data using the professor's ID
         const ratingResponse = await chrome.runtime.sendMessage({
@@ -188,17 +205,14 @@ async function getRatingData(profName) {
 
         if (!ratingResponse.success) {
             console.error("API Error (fetchRating):", ratingResponse.error);
-            return;
+            return
         }
 
         // Step 4: Extract and log the rating data
-        const { avgDifficulty, avgRating, url } = ratingResponse.data.node;
-        console.log("Average Difficulty:", avgDifficulty);
-        console.log("Average Rating:", avgRating);
-        console.log("URL:", url);
+        return ratingResponse.data.node
     } catch (error) {
-        console.error("Message failed:", error);
+        console.error("Message failed:", error)
     }
 }
   
-getRatingData("Olga Karpenko");
+// getRatingData("Olga Karpenko")

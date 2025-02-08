@@ -156,3 +156,49 @@ document.getElementById('search-go').addEventListener('click', () => {
         subtree: true
     })
 })
+
+async function getRatingData(profName) {
+    try {
+        // Just follow the flow🌊
+        // Step 1: Fetch professor data by name
+        const profResponse = await chrome.runtime.sendMessage({
+            action: "fetchProf",
+            profName: profName,
+        });
+
+        if (!profResponse.success) {
+            console.error("API Error (fetchProf):", profResponse.error, "for professor:", profName);
+            return;
+        }
+
+        // Step 2: Extract the professor's ID from the first result (gotta be quick, so don't care about the rest)
+        const firstResult = profResponse.data.newSearch.teachers.edges[0];
+        if (!firstResult) {
+            console.error("No professor found with the name:", profName);
+            return;
+        }
+
+        const profId = firstResult.node.id;
+
+        // Step 3: Fetch rating data using the professor's ID
+        const ratingResponse = await chrome.runtime.sendMessage({
+            action: "fetchRating",
+            profId: profId,
+        });
+
+        if (!ratingResponse.success) {
+            console.error("API Error (fetchRating):", ratingResponse.error);
+            return;
+        }
+
+        // Step 4: Extract and log the rating data
+        const { avgDifficulty, avgRating, url } = ratingResponse.data.node;
+        console.log("Average Difficulty:", avgDifficulty);
+        console.log("Average Rating:", avgRating);
+        console.log("URL:", url);
+    } catch (error) {
+        console.error("Message failed:", error);
+    }
+}
+  
+getRatingData("Olga Karpenko");

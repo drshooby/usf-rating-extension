@@ -6,6 +6,12 @@
     "permissions": [
         "activeTab"
     ],
+    "host_permissions": [
+        "https://rmp-retriever.onrender.com/*"
+    ],
+    "background": {
+        "service_worker": "scripts/background.js"
+    },
     "content_scripts": [
         {
             "js": ["scripts/content.js"],
